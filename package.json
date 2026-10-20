@@ -1,0 +1,24 @@
+{
+  "name": "webcrypto-pop-replay-auth",
+  "version": "1.0.0",
+  "description": "Web Crypto API-Based Proof-of-Possession Authentication for Replay-Resistant Token Security",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/test-suite.js"
+  },
+  "keywords": [
+    "cryptography",
+    "web-crypto-api",
+    "proof-of-possession",
+    "replay-prevention",
+    "ecdsa",
+    "dpop"
+  ],
+  "author": "Cybersecurity Research Mini-Project",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proof-of-Possession Authentication: Live Owner vs. Attacker Demonstration</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <header class="header-container">
+    <div class="header-brand">
+      <div class="brand-shield" aria-hidden="true">🛡️</div>
+      <div>
+        <h1 class="brand-title">Web Crypto API Proof-of-Possession Authentication</h1>
+        <p class="brand-subtitle">Live Owner vs. Attacker Demonstration &bull; Cryptography & Network Security</p>
+      </div>
+    </div>
+    <div class="header-controls">
+      <div class="header-badges">
+        <span class="badge badge-accent">Web Crypto API</span>
+        <span class="badge badge-cyan">ECDSA P-256</span>
+        <span class="badge badge-green">SHA-256</span>
+        <span class="badge badge-blue">Replay Cache</span>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-global-reset" title="Reset all client and server states to initial">
+        <span>🔄 Reset Demonstration State</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="main-layout">
+    <!-- Interactive Demonstration Sequence Roadmap (Steps 1 to 9) -->
+    <section class="roadmap-card" aria-label="Demonstration Progression">
+      <div class="roadmap-header">
+        <div class="roadmap-title-area">
+          <span class="roadmap-label">Faculty Demonstration Roadmap</span>
+          <span class="roadmap-subtitle">Standard 9-Step Verification Sequence</span>
+        </div>
+        <div class="roadmap-actions">
+          <button type="button" class="btn btn-cyan btn-sm" id="btn-auto-demo">
+            <span>▶️ Auto-Run Full Demonstration (Steps 1-9)</span>
+          </button>
+        </div>
+      </div>
+      <div class="roadmap-steps" id="roadmap-steps-container">
+        <div class="step-pill step-active" data-step="1" id="step-pill-1">
+          <span class="step-circle">1</span>
+          <span class="step-text">Owner Login</span>
+        </div>
+        <div class="step-pill" data-step="2" id="step-pill-2">
+          <span class="step-circle">2</span>
+          <span class="step-text">Register Key</span>
+        </div>
+        <div class="step-pill" data-step="3" id="step-pill-3">
+          <span class="step-circle">3</span>
+          <span class="step-text">Owner GET</span>
+        </div>
+        <div class="step-pill" data-step="4" id="step-pill-4">
+          <span class="step-circle">4</span>
+          <span class="step-text">Owner POST</span>
+        </div>
+        <div class="step-pill" data-step="5" id="step-pill-5">
+          <span class="step-circle">5</span>
+          <span class="step-text">Token w/o Proof</span>
+        </div>
+        <div class="step-pill" data-step="6" id="step-pill-6">
+          <span class="step-circle">6</span>
+          <span class="step-text">Attacker Key Forgery</span>
+        </div>
+        <div class="step-pill" data-step="7" id="step-pill-7">
+          <span class="step-circle">7</span>
+          <span class="step-text">Replay Attack</span>
+        </div>
+        <div class="step-pill" data-step="8" id="step-pill-8">
+          <span class="step-circle">8</span>
+          <span class="step-text">Request Tampering</span>
+        </div>
+        <div class="step-pill" data-step="9" id="step-pill-9">
+          <span class="step-circle">9</span>
+          <span class="step-text">Compare Results</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Core Two-Column Live Demonstration Workspace -->
+    <div class="demo-workspace-grid">
+      
+      <!-- ============================================================= -->
+      <!-- LEFT COLUMN: LEGITIMATE OWNER CLIENT (Authorized Session)   -->
+      <!-- ============================================================= -->
+      <section class="client-column panel-owner" id="panel-owner-container">
+        <div class="client-header">
+          <div class="client-title-area">
+            <span class="client-icon" aria-hidden="true">🛡️</span>
+            <div>
+              <h2 class="client-title">Legitimate Owner Client</h2>
+              <span class="client-subtitle">Authorized User Session &bull; Private Key Securely in Browser Memory</span>
+            </div>
+          </div>
+          <span class="badge badge-green" id="owner-status-badge">Disconnected</span>
+        </div>
+
+        <!-- Owner Section 1: Authentication -->
+        <div class="card client-card">
+          <div class="panel-header-inner">
+            <h3 class="inner-title">1. Owner Authentication</h3>
+            <span class="step-badge">Step 1</span>
+          </div>
+
+          <!-- Auth Mode Toggle Tabs -->
+          <div class="auth-tabs" id="owner-auth-tabs">
+            <button type="button" class="auth-tab-btn active" id="tab-login-btn">Sign In</button>
+            <button type="button" class="auth-tab-btn" id="tab-register-btn">Register New Account</button>
+          </div>
+
+          <!-- Login Form -->
+          <div id="owner-login-box">
+            <form id="owner-login-form" class="flow-form">
+              <div class="form-group">
+                <label for="owner-username">User / Student Email</label>
+                <input type="email" id="owner-username" class="form-control" placeholder="alice@cyber.edu" value="alice@cyber.edu" required autocomplete="username">
+              </div>
+              <div class="form-group">
+                <label for="owner-password">Password</label>
+                <input type="password" id="owner-password" class="form-control" placeholder="••••••••••••" value="CryptoSec#2026" required autocomplete="current-password">
+              </div>
+              <div class="button-row">
+                <button type="submit" class="btn btn-primary" id="btn-owner-login">
+                  <span>Sign In as Owner</span>
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-owner-fill-demo">
+                  <span>Autofill Demo Account</span>
+                </button>
+              </div>
+            </form>
+            <p class="form-note">
+              Demo Credentials: <code class="code-inline">alice@cyber.edu</code> / <code class="code-inline">CryptoSec#2026</code>
+            </p>
+          </div>
+
+          <!-- Registration Form -->
+          <div id="owner-register-box" class="hidden">
+            <form id="owner-register-form" class="flow-form">
+              <div class="form-group">
+                <label for="register-email">Email Address (Local Identifier)</label>
+                <input type="email" id="register-email" class="form-control" placeholder="user@cyber.edu or student@gmail.com" required autocomplete="email">
+                <small class="field-hint">Local identifier only. Does NOT verify email inbox or use Google OAuth.</small>
+              </div>
+              <div class="form-group">
+                <label for="register-password">Password</label>
+                <input type="password" id="register-password" class="form-control" placeholder="••••••••••••" required autocomplete="new-password">
+                <small class="field-hint">Min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special symbol (!@#$%^&*).</small>
+              </div>
+              <div class="form-group">
+                <label for="register-confirm-password">Confirm Password</label>
+                <input type="password" id="register-confirm-password" class="form-control" placeholder="••••••••••••" required autocomplete="new-password">
+              </div>
+              <div class="button-row">
+                <button type="submit" class="btn btn-green" id="btn-owner-register">
+                  <span>Register Local Account</span>
+                </button>
+              </div>
+            </form>
+            <div id="register-feedback" class="feedback-banner hidden"></div>
+          </div>
+
+          <!-- Authenticated State Details -->
+          <div id="owner-authenticated-box" class="hidden">
+            <div class="user-profile-banner">
+              <div class="user-avatar">👤</div>
+              <div class="user-info">
+                <div class="user-name" id="owner-display-name">Alice Owner</div>
+                <div class="user-meta" id="owner-display-meta">Role: Authorized Token Owner &bull; ID: CS-2026-8841</div>
+              </div>
+              <button type="button" class="btn btn-danger btn-sm" id="btn-owner-logout">
+                <span>Sign Out</span>
+              </button>
+            </div>
+
+            <!-- Token Display & Theft Vector Control -->
+            <div class="token-banner">
+              <div class="token-header-row">
+                <span class="token-label">Issued Session Bearer Token (256-Bit CSPRNG):</span>
+                <span class="token-expiry-label" id="owner-timer-display">Expires in: 15:00</span>
+              </div>
+              <div class="token-display-box font-mono" id="owner-masked-token">
+                e4f2••••••••••••••••••••••••••••••••••••••••••••••••••••••••881a
+              </div>
+              <div class="token-actions-row">
+                <button type="button" class="btn btn-amber btn-sm" id="btn-copy-token-to-attacker">
+                  <span>⚠️ Copy Stolen Token to Attacker Simulator</span>
+                </button>
+                <span class="token-hint">Simulates token leakage/theft to rogue client</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Owner Section 2: Cryptographic Identity & Public Key Registration -->
+        <div class="card client-card">
+          <div class="panel-header-inner">
+            <h3 class="inner-title">2. Cryptographic Key Management (Web Crypto)</h3>
+            <span class="step-badge">Step 2</span>
+          </div>
+
+          <p class="section-desc">
+            The owner generates a hardware/browser-protected <strong>ECDSA P-256</strong> key pair. The private key has <code class="code-inline">extractable: false</code> and never leaves memory. Only the public key (SPKI format) is registered with the session.
+          </p>
+
+          <div class="key-status-display">
+            <div class="key-status-row">
+              <span class="key-label">Owner Key Status:</span>
+              <span class="key-value highlight-green" id="owner-key-status">No Key Generated</span>
+            </div>
+            <div class="key-status-row">
+              <span class="key-label">Browser Key Storage:</span>
+              <span class="key-value highlight-cyan" id="owner-key-storage">IndexedDB (Persistent)</span>
+            </div>
+            <div class="key-status-row">
+              <span class="key-label">Public Key Thumbprint (SHA-256):</span>
+              <span class="key-value font-mono highlight-cyan" id="owner-key-thumbprint">None</span>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button type="button" class="btn btn-cyan" id="btn-owner-generate-key" disabled>
+              <span>Generate & Register Owner Key</span>
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm hidden" id="btn-owner-reenrol-key">
+              <span>Re-enrol Key</span>
+            </button>
+          </div>
+
+          <details class="tech-details" id="owner-key-details">
+            <summary>Inspect Owner Public Key & Cryptographic Parameters</summary>
+            <div class="details-content">
+              <div class="detail-item">
+                <span class="detail-label">Algorithm & Curve:</span>
+                <span class="detail-value font-mono">ECDSA over NIST P-256 (secp256r1)</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Private Key Protection:</span>
+                <span class="detail-value highlight-green">extractable: false (W3C Non-Extractable CryptoKey)</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Exported Public Key SPKI (Base64):</span>
+                <pre class="code-block" id="owner-spki-text">Not exported</pre>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <!-- Owner Section 3: Proof-of-Possession Protected Access -->
+        <div class="card client-card">
+          <div class="panel-header-inner">
+            <h3 class="inner-title">3. Proof-of-Possession Protected Requests</h3>
+            <span class="step-badge">Steps 3 & 4</span>
+          </div>
+
+          <p class="section-desc">
+            The owner signs requests with their private key, producing an IEEE P1363 (64-byte) signature binding the HTTP method, path, timestamp, single-use nonce, and request-body hash.
+          </p>
+
+          <!-- GET Request -->
+          <div class="action-box">
+            <div class="action-box-header">
+              <strong>Step 3: Access Confidential Resource (GET /api/protected)</strong>
+              <button type="button" class="btn btn-green btn-sm" id="btn-owner-get-protected" disabled>
+                <span>Execute Signed GET</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- POST Request Mutation Form -->
+          <div class="action-box">
+            <div class="action-box-header">
+              <strong>Step 4: Submit Signed Mutation (POST /api/protected/mutation)</strong>
+            </div>
+            <form id="owner-mutation-form" class="mutation-form">
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="mutation-record-title">Record Title</label>
+                  <input type="text" id="mutation-record-title" class="form-control" value="Cybersecurity Cryptography Capstone" required>
+                </div>
+                <div class="form-group">
+                  <label for="mutation-grade">Assessment Grade</label>
+                  <input type="text" id="mutation-grade" class="form-control" value="A+ (Distinction)" required>
+                </div>
+              </div>
+              <div class="button-row">
+                <button type="submit" class="btn btn-cyan btn-sm" id="btn-owner-post-mutation" disabled>
+                  <span>Sign & Submit Mutation (POST)</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Result Inspector for Owner -->
+          <div class="result-viewer hidden" id="owner-result-container">
+            <div class="result-viewer-header">
+              <span class="result-title" id="owner-result-title">Response</span>
+              <span class="badge badge-green" id="owner-result-badge">200 OK</span>
+            </div>
+            <pre class="code-block" id="owner-result-body"></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================= -->
+      <!-- RIGHT COLUMN: ATTACKER SIMULATOR (Adversary Client)           -->
+      <!-- ============================================================= -->
+      <section class="client-column panel-attacker" id="panel-attacker-container">
+        <div class="client-header">
+          <div class="client-title-area">
+            <span class="client-icon" aria-hidden="true">🦹</span>
+            <div>
+              <h2 class="client-title">Attacker Simulator</h2>
+              <span class="client-subtitle">Adversary Client &bull; Independent Cryptographic Identity & Stolen Token Vector</span>
+            </div>
+          </div>
+          <span class="badge badge-danger">Adversary Active</span>
+        </div>
+
+        <!-- Attacker Section 1: Independent Identity & Stolen Token -->
+        <div class="card client-card">
+          <div class="panel-header-inner">
+            <h3 class="inner-title">1. Attacker Cryptographic Identity</h3>
+            <span class="badge badge-danger">Independent State</span>
+          </div>
+
+          <p class="section-desc">
+            The attacker generates an <strong>independent ECDSA P-256 key pair</strong> in their own client. The attacker <strong>never</strong> has access to the owner's private key.
+          </p>
+
+          <div class="key-status-display">
+            <div class="key-status-row">
+              <span class="key-label">Attacker Key Status:</span>
+              <span class="key-value highlight-red" id="attacker-key-status">No Key Generated</span>
+            </div>
+            <div class="key-status-row">
+              <span class="key-label">Attacker Key Thumbprint (SHA-256):</span>
+              <span class="key-value font-mono highlight-red" id="attacker-key-thumbprint">None</span>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button type="button" class="btn btn-danger" id="btn-attacker-generate-key">
+              <span>Generate Independent Attacker Key</span>
+            </button>
+          </div>
+
+          <!-- Stolen Token Input -->
+          <div class="stolen-token-box">
+            <div class="box-title highlight-red">Stolen Bearer Token Storage</div>
+            <p class="box-desc">
+              Paste a stolen bearer token or click "Import Owner Token" to simulate token leakage from headers, logs, or network interception.
+            </p>
+            <div class="stolen-input-row">
+              <input type="text" id="attacker-token-input" class="form-control font-mono" placeholder="Paste stolen token or click Import below...">
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-attacker-import-token">
+                <span>Import Owner Token</span>
+              </button>
+            </div>
+            <div class="stolen-token-indicator" id="attacker-token-status-indicator">
+              Status: <span class="highlight-amber">No Stolen Token Loaded</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Attacker Section 2: Real Attack Vectors against Server -->
+        <div class="card client-card">
+          <div class="panel-header-inner">
+            <h3 class="inner-title">2. Controlled Attack Simulations</h3>
+            <span class="badge badge-accent">Backend Verified</span>
+          </div>
+
+          <p class="section-desc">
+            Every attack below transmits genuine HTTP requests to the Node.js backend to test the server's cryptographic verification and replay defense mechanisms.
+          </p>
+
+          <div class="attack-list">
+            <!-- Attack 1: Token without proof -->
+            <div class="attack-item">
+              <div class="attack-meta">
+                <span class="sim-badge badge-danger">Attack 1</span>
+                <strong>Stolen Token Without Proof</strong>
+                <p>Sends the stolen token alone without PoP headers (tests standard bearer vulnerability).</p>
+              </div>
+              <button type="button" class="btn btn-danger btn-sim" id="btn-attack-no-proof">
+                <span>Execute</span>
+              </button>
+            </div>
+
+            <!-- Attack 2: Sign with Attacker Key -->
+            <div class="attack-item">
+              <div class="attack-meta">
+                <span class="sim-badge badge-danger">Attack 2</span>
+                <strong>Forge Signature with Attacker's Key</strong>
+                <p>Presents stolen token, but signs request using Attacker's own private key!</p>
+              </div>
+              <button type="button" class="btn btn-danger btn-sim" id="btn-attack-attacker-key">
+                <span>Execute</span>
+              </button>
+            </div>
+
+            <!-- Attack 3: Replay Request -->
+            <div class="attack-item">
+              <div class="attack-meta">
+                <span class="sim-badge badge-danger">Attack 3</span>
+                <strong>Replay Captured Valid Request</strong>
+                <p>Resends the exact same token, nonce, timestamp, and signature captured from Owner.</p>
+              </div>
+              <button type="button" class="btn btn-danger btn-sim" id="btn-attack-replay">
+                <span>Execute</span>
+              </button>
+            </div>
+
+            <!-- Attack 4: Corrupted Signature -->
+            <div class="attack-item">
+              <div class="attack-meta">
+                <span class="sim-badge badge-danger">Attack 4</span>
+                <strong>Tampered Cryptographic Signature</strong>
+                <p>Flips bytes in the signature payload to simulate data corruption or forging.</p>
+              </div>
+              <button type="button" class="btn btn-danger btn-sim" id="btn-attack-tampered-sig">
+                <span>Execute</span>
+              </button>
+            </div>
+
+            <!-- Attack 5: Expired Proof -->
+            <div class="attack-item">
+              <div class="attack-meta">
+                <span class="sim-badge badge-danger">Attack 5</span>
+                <strong>Expired Proof Timestamp</strong>
+                <p>Signs with a timestamp 2 minutes in past (exceeds 60-second validity window).</p>
+              </div>
+              <button type="button" class="btn btn-danger btn-sim" id="btn-attack-expired-timestamp">
+                <span>Execute</span>
+              </button>
+            </div>
+
+            <!-- Attack 6: Tampered Request Path -->
+            <div class="attack-item">
+              <div class="attack-meta">
+                <span class="sim-badge badge-danger">Attack 6</span>
+                <strong>Tampered Request Path Binding</strong>
+                <p>Signed for <code class="code-inline">/api/protected</code>, sent to <code class="code-inline">/api/protected?elevate_role=admin</code>.</p>
+              </div>
+              <button type="button" class="btn btn-danger btn-sim" id="btn-attack-tampered-path">
+                <span>Execute</span>
+              </button>
+            </div>
+
+            <!-- Attack 7: Tampered Request Body -->
+            <div class="attack-item">
+              <div class="attack-meta">
+                <span class="sim-badge badge-danger">Attack 7</span>
+                <strong>Tampered Request Body Mutation</strong>
+                <p>Signature created for Grade A+, but body payload modified to Grade F in transit.</p>
+              </div>
+              <button type="button" class="btn btn-danger btn-sim" id="btn-attack-tampered-body">
+                <span>Execute</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="run-all-row">
+            <button type="button" class="btn btn-danger btn-block" id="btn-attack-run-all">
+              <span>⚡ Execute Full Attack Suite (Attacks 1 through 7)</span>
+            </button>
+          </div>
+
+          <!-- Result Inspector for Attacker -->
+          <div class="result-viewer hidden" id="attacker-result-container">
+            <div class="result-viewer-header">
+              <span class="result-title" id="attacker-result-title">Attacker Response</span>
+              <span class="badge badge-danger" id="attacker-result-badge">401 REJECTED</span>
+            </div>
+            <pre class="code-block" id="attacker-result-body"></pre>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- BOTTOM: LIVE ATTACK-AND-DEFENSE AUDIT STREAM                 -->
+    <!-- ============================================================= -->
+    <section class="card panel-card audit-section">
+      <div class="panel-header">
+        <div class="log-header-left">
+          <h2 class="panel-title">Live Attack-and-Defense Audit Stream</h2>
+          <span class="log-counter" id="audit-log-counter">0 Events</span>
+        </div>
+        <div class="log-header-right">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-audit-log">Clear Event Log</button>
+        </div>
+      </div>
+
+      <div class="log-filter-bar">
+        <button class="filter-pill active" data-filter="all">All Events</button>
+        <button class="filter-pill" data-filter="owner">🟢 Owner Requests Only</button>
+        <button class="filter-pill" data-filter="attacker">🔴 Attacker Attempts Only</button>
+        <button class="filter-pill" data-filter="success">Accepted (200 OK)</button>
+        <button class="filter-pill" data-filter="replay">Replays Blocked (409)</button>
+        <button class="filter-pill" data-filter="rejected">Attacks Blocked (4xx)</button>
+      </div>
+
+      <div class="activity-log-container" id="audit-stream-container">
+        <div class="log-placeholder">No security events logged yet. Execute an Owner request or an Attacker simulation to observe real-time cryptographic verification results.</div>
+      </div>
+    </section>
+
+    <!-- Educational Concept & Architecture Guide -->
+    <section class="card panel-card educational-section">
+      <div class="panel-header">
+        <h2 class="panel-title">Educational Security Architecture & Defense Analysis</h2>
+        <span class="badge badge-accent">Theory & Viva Preparation</span>
+      </div>
+
+      <div class="edu-grid">
+        <div class="edu-item">
+          <h3>The Central Problem: Stolen Bearer Tokens</h3>
+          <p>
+            In ordinary bearer-token authentication (OAuth2 / standard JWT), the bearer token acts like physical cash. If an attacker intercepts the token via server logs, network eavesdropping, or proxy inspection, the attacker can impersonate the user from any machine.
+          </p>
+        </div>
+
+        <div class="edu-item">
+          <h3>The Solution: Proof-of-Possession (PoP)</h3>
+          <p>
+            Proof-of-Possession cryptographically binds the bearer token to an asymmetric ECDSA P-256 key pair. The private key remains non-extractable in the owner's browser. The server verifies that each request is signed by the exact private key corresponding to the session's registered public key.
+          </p>
+        </div>
+
+        <div class="edu-item">
+          <h3>Why Attacker Key Forgery Fails (Attack 2)</h3>
+          <p>
+            Even if an attacker possesses the stolen bearer token and generates their own valid ECDSA private key to sign the request, the backend checks the signature against the <em>Owner's registered public key</em> stored in the session table. Verification fails with <code class="code-inline">401 SIGNATURE_INVALID</code>.
+          </p>
+        </div>
+
+        <div class="edu-item">
+          <h3>Replay Prevention: Timestamp + Nonce Cache</h3>
+          <p>
+            If an attacker captures the owner's exact signed request and re-transmits it (Attack 3), the server rejects it with <code class="code-inline">409 REPLAY_DETECTED</code> because the unique proof identifier (nonce) is recorded in an atomic single-process cache with a 60-second sliding window.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer-container">
+    <p>
+      Cryptography & Network Security Mini-Project &bull; Live Owner vs. Attacker Demonstration &bull; Runs 100% on Localhost &bull; Zero External Dependencies
+    </p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
