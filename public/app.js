@@ -958,11 +958,34 @@ async function executeAttack2_AttackerKey() {
  * ATTACK 3 (Step 7): Replay previously accepted valid request proof.
  */
 async function executeAttack3_Replay() {
-  const proof = attackerState.capturedProof || ownerState.lastValidProof;
+  let proof = attackerState.capturedProof || ownerState.lastValidProof;
 
-  if (!proof) {
-    alert('No captured valid request available to replay. Have the Owner execute a successful GET request (Step 3) first.');
-    return;
+  // Check if we have a fresh valid proof (< 50 seconds old to stay safely within 60s freshness window)
+  const isProofFresh = proof && proof.timestamp && (Date.now() - parseInt(proof.timestamp, 10)) < 50000;
+
+  if (!isProofFresh) {
+    // If owner session and key are available, generate a fresh valid request and submit it first
+    if (ownerState.token && ownerState.keyPair) {
+      logAudit({
+        origin: 'SYSTEM',
+        eventType: 'REPLAY_SETUP',
+        statusCode: 200,
+        method: 'CAPTURE',
+        path: '/api/protected',
+        message: 'Capturing fresh legitimate request proof from Owner for replay demonstration...',
+        details: { note: 'Ensures replayed request is within the 60-second freshness window' },
+        passed: true
+      });
+      const getRes = await handleOwnerGetProtected();
+      if (!getRes || !getRes.ok) {
+        alert('Could not establish a fresh successful GET request to capture for replay.');
+        return;
+      }
+      proof = attackerState.capturedProof || ownerState.lastValidProof;
+    } else {
+      alert('No fresh captured valid request available to replay (< 50s old). Have the Owner execute a successful GET request (Step 3) first.');
+      return;
+    }
   }
 
   try {
@@ -985,7 +1008,9 @@ async function executeAttack3_Replay() {
       path,
       message: defenseSuccess
         ? 'DEFENSE SUCCEEDED: Replay attack intercepted! Server detected that proof nonce was already consumed.'
-        : 'SECURITY FAILURE: Replayed request was accepted by server!',
+        : (response.status === 401 && data.code === 'EXPIRED_PROOF'
+          ? 'DEFENSE SUCCEEDED (EXPIRED): Proof timestamp expired before replay. Generating a fresh proof will demonstrate 409 REPLAY_DETECTED.'
+          : 'SECURITY FAILURE: Replayed request was accepted by server!'),
       details: {
         attackVector: 'Duplicate Nonce Transmission (Replay)',
         replayedNonce: proof.nonce,
@@ -1027,12 +1052,19 @@ async function executeAttack4_TamperedSignature() {
     const path = '/api/protected';
     const canonicalString = buildCanonicalString('GET', path, timestamp, nonce, bodyHash);
 
-    let signature = Buffer ? Buffer.alloc(64, 0xAA).toString('base64') : window.btoa('A'.repeat(64));
-    if (ownerState.keyPair) {
-      signature = await signCanonicalData(canonicalString, ownerState.keyPair.privateKey);
-      // Flip first character
-      const firstChar = signature[0] === 'A' ? 'B' : 'A';
-      signature = firstChar + signature.slice(1);
+    let signature;
+    const privateKey = ownerState.keyPair ? ownerState.keyPair.privateKey : (attackerState.keyPair ? attackerState.keyPair.privateKey : null);
+    if (privateKey) {
+      const validSigBase64 = await signCanonicalData(canonicalString, privateKey);
+      const sigBuffer = base64ToArrayBuffer(validSigBase64);
+      const sigBytes = new Uint8Array(sigBuffer);
+      sigBytes[0] = sigBytes[0] ^ 0xFF; // Deliberately corrupt the first byte of the signature
+      signature = arrayBufferToBase64(sigBytes.buffer);
+    } else {
+      // Create a 64-byte dummy IEEE P1363 buffer using browser-native Uint8Array
+      const dummyBytes = new Uint8Array(64);
+      dummyBytes.fill(0xAA);
+      signature = arrayBufferToBase64(dummyBytes.buffer);
     }
 
     const headers = {

@@ -853,6 +853,65 @@ async function runAllTests() {
                         enrolledProtectedRes.statusCode === 200;
     record('Check 17: Account-Enrolled Key Association across Sessions', check17Pass, `HTTP 200 - Enrolled key linked to new session upon re-login`);
 
+    // ------------------------------------------------------------------------
+    // Check 18: Future Timestamp Exceeding Clock Skew Rejected
+    // ------------------------------------------------------------------------
+    const futureTimestamp = (Date.now() + 30000).toString(); // 30s in future (> 10s skew)
+    const futureNonce = crypto.randomBytes(16).toString('hex');
+    const futureCanonical = buildCanonicalString('GET', '/api/protected', futureTimestamp, futureNonce, bodyHashA);
+    const futureSig = await signData(futureCanonical, clientKeyPair.privateKey);
+
+    const futureRes = await httpRequest(`${baseUrl}/api/protected`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${bearerToken}`,
+        'X-PoP-Timestamp': futureTimestamp,
+        'X-PoP-Nonce': futureNonce,
+        'X-PoP-Signature': futureSig
+      }
+    });
+    const futurePass = futureRes.statusCode === 401 && futureRes.json?.code === 'FUTURE_TIMESTAMP';
+    record('Check 18: Future Timestamp Outside Skew Rejected', futurePass, `HTTP 401 FUTURE_TIMESTAMP`);
+
+    // ------------------------------------------------------------------------
+    // Check 19: Malformed Timestamp Non-Integer Syntax Rejected Safely
+    // ------------------------------------------------------------------------
+    const malformedTimeRes = await httpRequest(`${baseUrl}/api/protected`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${bearerToken}`,
+        'X-PoP-Timestamp': 'not-a-timestamp-1234!',
+        'X-PoP-Nonce': crypto.randomBytes(16).toString('hex'),
+        'X-PoP-Signature': signatureA
+      }
+    });
+    const malformedTimePass = malformedTimeRes.statusCode === 400 && malformedTimeRes.json?.code === 'MALFORMED_TIMESTAMP';
+    record('Check 19: Malformed Timestamp Rejected Safely', malformedTimePass, `HTTP 400 MALFORMED_TIMESTAMP`);
+
+    // ------------------------------------------------------------------------
+    // Check 20: Malformed Signature Format Handled Without Server Crash
+    // ------------------------------------------------------------------------
+    const malformedSigRes = await httpRequest(`${baseUrl}/api/protected`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${bearerToken}`,
+        'X-PoP-Timestamp': Date.now().toString(),
+        'X-PoP-Nonce': crypto.randomBytes(16).toString('hex'),
+        'X-PoP-Signature': 'short-bad-sig'
+      }
+    });
+    const malformedSigPass = malformedSigRes.statusCode === 401 && malformedSigRes.json?.code === 'INVALID_SIGNATURE_ENCODING';
+    record('Check 20: Malformed Signature Rejected Safely', malformedSigPass, `HTTP 401 INVALID_SIGNATURE_ENCODING`);
+
+    // ------------------------------------------------------------------------
+    // Check 21: Security Audit Log Events Feed Verification
+    // ------------------------------------------------------------------------
+    const auditEventsRes = await httpRequest(`${baseUrl}/api/security/events`);
+    const auditEventsPass = auditEventsRes.statusCode === 200 &&
+                            Array.isArray(auditEventsRes.json?.events) &&
+                            auditEventsRes.json.events.length > 0;
+    record('Check 21: Security Audit Events Feed Verification', auditEventsPass, `HTTP 200 - Logged ${auditEventsRes.json?.events?.length} audit events`);
+
   } finally {
     server.close();
   }

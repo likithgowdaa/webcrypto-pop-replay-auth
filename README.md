@@ -225,9 +225,9 @@ http://localhost:3000
 
 ---
 
-## 12. Automated Security Test Suite (33 Tests)
+## 12. Automated Security Test Suite (37 Tests)
 
-The application includes an automated test script (`npm test`) exercising 33 distinct verification scenarios:
+The application includes an automated test script (`npm test`) exercising 37 distinct verification scenarios:
 
 ```powershell
 npm test
@@ -270,6 +270,10 @@ npm test
 | 31 | **Check 15** | Cookie Invalidation on Logout | `POST /api/auth/logout` | **200 OK** | Session revoked on server and cookie cleared with `Max-Age=0`. |
 | 32 | **Check 16** | Session Restoration Blocked Post-Logout | `GET /api/auth/session` | **401 Unauthorized** | Expired/cleared cookie rejected on subsequent reload. |
 | 33 | **Check 17** | Account Key Enrollment Across Sessions | `GET /api/protected` | **200 OK** | Enrolled key preserved for user account and bound upon re-login. |
+| 34 | **Check 18** | Future Timestamp Outside Skew Rejected | `GET /api/protected` | **401 Unauthorized** | Timestamps >10s in future rejected (`FUTURE_TIMESTAMP`). |
+| 35 | **Check 19** | Malformed Timestamp Non-Integer Rejected | `GET /api/protected` | **400 Bad Request** | Non-numeric or control-character timestamps rejected (`MALFORMED_TIMESTAMP`). |
+| 36 | **Check 20** | Malformed Signature Handled Without Server Crash | `GET /api/protected` | **401 Unauthorized** | Truncated or invalid signature strings safely rejected (`INVALID_SIGNATURE_ENCODING`). |
+| 37 | **Check 21** | Security Audit Log Feed Verification | `GET /api/security/events` | **200 OK** | Server audit stream endpoint returns chronological security verification logs. |
 
 ---
 

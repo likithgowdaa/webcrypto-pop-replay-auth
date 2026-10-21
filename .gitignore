@@ -1,1 +1,10 @@
 node_modules/
+.env
+.env.*
+!.env.example
+!.env.example.*
+coverage/
+.nyc_output/
+*.log
+.DS_Store
+Thumbs.db

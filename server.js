@@ -102,11 +102,17 @@ function recordAudit(event, outcome, details = {}) {
 function parseCookies(req) {
   const list = {};
   const rc = req.headers.cookie;
-  if (rc) {
+  if (rc && typeof rc === 'string') {
     rc.split(';').forEach(cookie => {
       const parts = cookie.split('=');
       const name = parts.shift().trim();
-      if (name) list[name] = decodeURIComponent(parts.join('='));
+      if (name) {
+        try {
+          list[name] = decodeURIComponent(parts.join('='));
+        } catch {
+          list[name] = parts.join('=');
+        }
+      }
     });
   }
   return list;
@@ -325,7 +331,8 @@ app.post('/api/auth/login', (req, res) => {
   }
 
   const { username, email, password } = req.body || {};
-  const userIdentifier = (username || email || '').trim().toLowerCase();
+  const rawId = typeof username === 'string' ? username : (typeof email === 'string' ? email : '');
+  const userIdentifier = rawId.trim().toLowerCase();
 
   if (!userIdentifier || !password || typeof password !== 'string') {
     return res.status(400).json({ error: 'Username/email and password are required.' });
@@ -413,7 +420,7 @@ app.post('/api/auth/login', (req, res) => {
 app.post('/api/auth/register-key', (req, res) => {
   let token = null;
   const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
+  if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
     token = authHeader.slice(7).trim();
   } else {
     const cookies = parseCookies(req);
@@ -518,7 +525,7 @@ app.post('/api/auth/register-key', (req, res) => {
 app.get('/api/auth/session', (req, res) => {
   let token = null;
   const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
+  if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
     token = authHeader.slice(7).trim();
   } else {
     const cookies = parseCookies(req);
@@ -561,7 +568,7 @@ app.get('/api/auth/session', (req, res) => {
 app.post('/api/auth/logout', (req, res) => {
   let token = null;
   const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
+  if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
     token = authHeader.slice(7).trim();
   } else {
     const cookies = parseCookies(req);
@@ -588,7 +595,7 @@ function verifyProofOfPossession(req, res, next) {
   const clientIp = req.ip || req.socket.remoteAddress || '127.0.0.1';
 
   // 1. Check Bearer Token Presence
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader || typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
     recordAudit('POP_VERIFICATION', 'REJECTED_MISSING_BEARER', { ip: clientIp, path: req.path });
     return res.status(401).json({
       error: 'Missing or malformed Authorization header. Expected Bearer <token>.',
@@ -870,7 +877,7 @@ app.post('/api/protected/mutation', verifyProofOfPossession, (req, res) => {
 // -------------------------------------------------------------
 app.get('/api/vulnerable-bearer', (req, res) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader || typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({
       error: 'Missing Bearer token.',
       type: 'ORDINARY_BEARER'
