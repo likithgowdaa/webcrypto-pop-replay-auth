@@ -342,3 +342,5 @@ npm test
 ## 16. License & Academic Integrity Notice
 
 This project is developed solely for educational and academic assessment purposes as part of an undergraduate Computer Science / Cybersecurity curriculum. It is intended to run locally on `localhost:3000`.
+
+this project was demonstrated on 23rd october cryptography & N/W security project expo
