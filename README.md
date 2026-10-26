@@ -338,9 +338,10 @@ npm test
 - **XSS Considerations:** While non-extractable keys prevent an attacker from reading the raw private key bytes, an in-browser Cross-Site Scripting (XSS) vulnerability could still allow a malicious script to instruct `subtle.sign()` to sign unauthorized requests during an active session. Full isolation requires Web Workers or WebAuthn hardware keys.
 
 ---
-
 ## 16. License & Academic Integrity Notice
 
 This project is developed solely for educational and academic assessment purposes as part of an undergraduate Computer Science / Cybersecurity curriculum. It is intended to run locally on `localhost:3000`.
 
 this project was demonstrated on 23rd october cryptography & N/W security project expo
+
+**26/10/2026 : bug fixes**
