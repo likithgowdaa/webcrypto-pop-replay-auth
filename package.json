@@ -22,8 +22,3 @@
     "express": "^4.21.2"
   }
 }
-"author": "Cybersecurity Research Mini-Project",
-  "license": "ISC",
-  "dependencies": {
-    "express": "^4.21.2"
-  }
